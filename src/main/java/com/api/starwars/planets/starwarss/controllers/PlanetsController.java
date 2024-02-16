@@ -4,11 +4,11 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,7 +20,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.api.starwars.planets.starwarss.domain.models.Planet;
-import com.api.starwars.planets.starwarss.StarwarssApplication;
+import com.api.starwars.planets.starwarss.infra.Entities.PlanetEntity;
+import com.api.starwars.planets.starwarss.infra.repositories.PlanetRepository;
 import com.api.starwars.planets.starwarss.domain.dtos.PlanetRequestDTO;
 
 @RestController
@@ -30,30 +31,33 @@ public class PlanetsController {
     private Logger logger = LogManager.getLogger(org.slf4j.Logger.class);
     private List<Planet> planets = new ArrayList<Planet>();
 
-    @GetMapping("/{name}")
-    public ResponseEntity<List<Planet>> getByName(@PathVariable String name) {
-        logger.info("Buscando planeta: {}", name);
+    @Autowired
+    private PlanetRepository repository;
 
-        if (name == null)
-            return new ResponseEntity<List<Planet>>(planets, HttpStatus.OK);
+    @GetMapping(value = { "/{name}" })
+    public ResponseEntity<List<PlanetEntity>> getByName(@PathVariable String name) {
 
-        Stream<Planet> findPlanet = planets.stream().filter(p -> p.getName().equals(name));
+        logger.info("Buscando planeta: %s", name);
 
-        if (findPlanet.count() == 0)
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        // Stream<Planet> findPlanet = planets.stream().filter(p -> p.getName().equals(name));
 
-        return new ResponseEntity<List<Planet>>(findPlanet.toList(), HttpStatus.OK);
+        // if (findPlanet.count() == 0)
+        //     return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
+        // return new ResponseEntity<List<Planet>>(findPlanet.toList(), HttpStatus.OK);
+
+        return new ResponseEntity<List<PlanetEntity>>(repository.findByName(name), HttpStatus.OK);
     }
 
     @GetMapping
     public ResponseEntity<Planet> getById(@RequestParam("id") UUID id) {
-        logger.info("Buscando planeta pelo id: ", id.toString());
+    logger.info("Buscando planeta pelo id: ", id.toString());
 
-        // TOOD: Implementar consulta na base de dados
-        Planet planet = new Planet(new PlanetRequestDTO("Teste",
-                "Teste", "Teste"));
+    // TOOD: Implementar consulta na base de dados
+    Planet planet = new Planet(new PlanetRequestDTO("Teste",
+    "Teste", "Teste"));
 
-        return new ResponseEntity<Planet>(planet, HttpStatus.OK);
+    return new ResponseEntity<Planet>(planet, HttpStatus.OK);
     }
 
     @PostMapping
@@ -71,10 +75,9 @@ public class PlanetsController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deletePlanet(@PathVariable UUID id) {
+    public ResponseEntity<String> removePlanet(@PathVariable UUID id) {
         logger.info("Acessando rota DELETE - deletePlanet");
 
         return new ResponseEntity<String>(String.format("Planeta ID %s exclu[ido", id.toString()), HttpStatus.OK);
     }
-
 }
